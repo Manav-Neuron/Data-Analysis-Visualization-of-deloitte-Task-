@@ -44,3 +44,19 @@ project= combine.groupby('city')['breakdown_count']
 sns.barplot(x='city',y='breakdown_count', data=data)
 plt.title("Machine Breakdown City Wise")
 
+
+
+# Script For Graph Of Machine Type Wise
+
+# Group by device type and count breakdowns
+device_breakdowns = df_issues.groupby('deviceType').size().reset_index(name='breakdown_count')
+
+# Plot device type breakdowns
+plt.figure(figsize=(8, 5))
+sns.barplot(x='deviceType', y='breakdown_count', 
+            data=device_breakdowns, 
+            order=device_breakdowns.sort_values('breakdown_count', ascending=False)['deviceType'])
+plt.title("Machine Breakdowns by Device Type")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
