@@ -1,0 +1,46 @@
+import pandas as pd
+from pandas import json_normalize
+from pandas.core.groupby.generic import DataFrameGroupBy
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+# Load JSON directly into a DataFrame
+df = pd.read_json('daikibo-telemetry-data.json')
+
+# Flatten the 'location' and 'data' columns
+location_df = pd.json_normalize(df['location'])
+data_df = pd.json_normalize(df['data'])
+
+# Combine with main df
+df_flat = pd.concat([df.drop(['location', 'data'], axis=1), location_df, data_df], axis=1)
+
+# Show preview
+print(df_flat)
+
+df_issues= df_flat[df_flat['status']!='healthy']
+df_breakdown_group = df_issues.groupby(['country', 'city','factory']).size().reset_index(name='breakdown_count')
+df_breakdown_count = df_breakdown_group.sort_values(by='breakdown_count', ascending=False)
+df_osaka= df_issues[df_issues['city']=='osaka']
+df_machine_type = df_osaka.groupby(['deviceType']).size().reset_index(name='machine_breakdown')
+
+osaka_total = df_breakdown_group[df_breakdown_group['city'] == 'osaka']
+osaka_final= ','.join(df_machine_type['deviceType'])
+osaka_total.copy()
+osaka_total["devicetype"]= osaka_final
+osaka_total=osaka_total.reset_index(drop=True)
+pd.DataFrame(osaka_total)
+
+city_breakdowns = df_breakdown_group.groupby('city')['breakdown_count'].sum().sort_values(ascending=False)
+data=pd.DataFrame(city_breakdowns)
+
+
+combine= pd.concat([df_breakdown_group,df_breakdown_count])
+project= combine.groupby('city')['breakdown_count']
+
+
+## Seaborn Visualization City Wise
+
+sns.barplot(x='city',y='breakdown_count', data=data)
+plt.title("Machine Breakdown City Wise")
+
